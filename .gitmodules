@@ -1,0 +1,9 @@
+[submodule "ext/NaxSoftware"]
+	path = ext/NaxSoftware
+	url = https://github.com/SpinalHDL/NaxSoftware.git
+[submodule "ext/VexiiRiscv"]
+	path = ext/VexiiRiscv
+	url = https://github.com/BrenaySoc/VexiiRiscv.git
+[submodule "ext/SpinalHDL"]
+	path = ext/SpinalHDL
+	url = https://github.com/BrenaySoc/SpinalHDL.git
