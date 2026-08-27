@@ -1,0 +1,67 @@
+@startuml architecture
+
+<style>
+.tilelink {
+  BackgroundColor #navy
+  LineColor #navy
+  FontColor white
+}
+</style>
+hide <<tilelink>> stereotype
+
+!theme bluegray
+
+rectangle "CCGM1A1 FPGA" {
+  rectangle "processing @ 25 MHz" as processingCd {
+    together {
+    [VexiiRiscv] as vexii
+    card coreBus <<tilelink>>
+
+    together {
+        card slow.bus as slowBus <<tilelink>>
+        [Uart]
+        [internalRam]
+    }
+    }
+
+    vexii -down- coreBus <<tilelink>>
+    coreBus - slowBus <<tilelink>>
+  
+    slowBus -down- internalRam <<tilelink>>
+    slowBus -down- Uart <<tilelink>>
+ 
+    card memsBus <<tilelink>>
+    [GPU]
+    [GraphicController]
+
+    coreBus -down- memsBus <<tilelink>>
+
+    GPU -down- memsBus <<tilelink>>
+    GraphicController -down- memsBus <<tilelink>>
+    [SioRamController]
+    memsBus -down- SioRamController <<tilelink>>
+  }
+
+
+rectangle "extMems @ 100 MHz" as extMemsCd {  
+  [SioSerializerCc]
+  
+  SioRamController -down- SioSerializerCc
+}
+
+rectangle "graphic @ 25.175 MHz" as graphicCd {  
+  [VgaSink] 
+   
+  GraphicController -down-> VgaSink
+
+}
+
+    extMemsCd -[hidden]> graphicCd
+}
+
+[VGA 4:4:4 + sync IOs] as vgaIos
+[QPI PSRAM] as PSRAM
+
+VgaSink -down-> vgaIos
+SioSerializerCc -down- PSRAM
+@enduml
