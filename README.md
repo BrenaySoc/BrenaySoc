@@ -32,8 +32,11 @@ Features:
 
 ## Architecture
 
+![Architecture diagram](doc/architecture.svg)
 
 ## Current status and roadmap
+
+The project is still pretty experimental and subject to change.
 
 All frequencies are stated for `nextpnr -o fpga_mode=speed -o time_mode=worst`, i.e.
 -40° to +125 °C junction temperature operating range for 1.1V core voltage.
