@@ -148,6 +148,57 @@ export SPINALHDL_FROM_SOURCE=1
 export SPINAL_SIM_SEED="1"  
 ```
 
+## codium/vscode settings
+
+Install:
+
+ - [Scala(Metals)](https://github.com/scalameta/metals-vscode)
+ - optionally [Code Spell Checker](https://github.com/streetsidesoftware/vscode-spell-checker)
+
+The following config seems to work fine. Currently (codium 1.126, scalameta 1.70.0)
+the Bloop build server do not work, execute "View -> Command Palette ... -> Metals: Switch
+build server" and select "sbt".
+
+```json
+{
+    // this excludes directories with a lot of build activity that penalize perf
+    "files.watcherExclude": {
+        "**/target/**": true,
+        "simWorkspace/**": true,
+        "flow_build/**": true
+    },
+    "terminal.integrated.profiles.linux": {
+        "Bash oss-cad-suite": {
+            "path": "/usr/bin/bash",
+            "args": [
+                // this ensure that the .bashrc is loaded
+                "-c",
+                "source .env && bash -i"
+            ],
+            "overrideName": true
+        }
+    },
+    "terminal.integrated.defaultProfile.linux": "Bash oss-cad-suite",
+    "metals.testEnvironmentVariables": {
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/oss-cad-suite/bin:${env:PATH}",
+        "SPINALHDL_PATH": "<REPOS ABSOLUTE PATH>/ext/SpinalHDL", // !!!!!!! change this !!!!!!!!!
+        "SPINALHDL_FROM_SOURCE": "1",
+        "SPINAL_SIM_SEED": "1"
+    },
+    "editor.rulers": [
+        80,   // mainly for text block to still be readable
+        100,  // project scala line width
+        120   // for scala deep functional code (not needed in HDL generally)
+    ],
+    "editor.formatOnSave": true,
+    "[scala]": {
+        "editor.defaultFormatter": "scalameta.metals",
+    },
+}
+```
+
+
+
 ## Run tests
 
 In the OSS ready terminal, run this:

@@ -28,7 +28,7 @@ scalacOptions ++= Seq(
   "-Xlint:infer-any"
 )
 
-// TODO fix the fact that vexii doesn't work without full 
+// TODO fix the fact that vexii doesn't work without full
 // `git submodule update --init --recursive  ext/VexiiRiscv/`
 val vexiiRoot = file("ext/VexiiRiscv")
 lazy val vexiiRiscv = RootProject(vexiiRoot)

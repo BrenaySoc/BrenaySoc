@@ -71,6 +71,7 @@
     "scalac",
     "scalafix",
     "scalafmt",
+    "scalameta",
     "scalatest",
     "schmitt",
     "SCLK",

@@ -6,7 +6,7 @@ import spinal.lib.Counter
 
 import java.io.File
 
-import brenay.lib.blackbox.cologne.gatemate.IoVoltage
+import brenay.lib.blackbox.cologne.gatemate.{IoVoltage, CcUsrRstn}
 import brenay.lib.gatemate.SioSerializerCc
 import brenay.vgasoc.{Processing, VgaSink, VgaSocParam}
 import vexiiriscv.fetch.PcPlugin
@@ -58,10 +58,8 @@ class VgaSoc(
 
   p.ramElf = Some(new File(ramElfPathName))
 
-  // change default params
+  /* change the default config here
 
-  /* TODO to test of conditional code
-  // limit complexity and don't add graphics
   p.withGraphic = false
   p.withMcu = true
   p.withMcuJtag = true
@@ -72,9 +70,8 @@ class VgaSoc(
 
   p.vexii.withGShare = false
   p.vexii.withBtb = false
-
-
    */
+
   val debugBusConfig: DebugBusConfig = DebugBusConfig.Zeros
 
   p.legalize()
@@ -286,8 +283,8 @@ class VgaSoc(
 
       case DebugBusConfig.JtagAndResets =>
         new Area {
-          // debug jtag and reset
-          debugBus(0) := False
+          val ccUsrRstn = new CcUsrRstn()
+          debugBus(0) := ccUsrRstn.io.usrRstn
           debugBus(1) := (if (p.withMcuJtag) socCtrl.debugClockDomain.readResetWire else False)
           debugBus(2) := socCtrl.processingClockDomain.readResetWire
           debugBus(3) := socCtrl.extMemsClockDomain.readResetWire
