@@ -206,7 +206,7 @@ class SocCtrl(
           )
         )
       ) {
-        val rst = BufferCC(systemResetCtrl.reset)
+        val rst = BufferCC(systemResetCtrl.reset, init = True)
       }
 
       val clockDomain = ClockDomain(

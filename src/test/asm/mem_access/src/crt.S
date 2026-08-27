@@ -3,7 +3,7 @@
 // 
 
 // ---------- test parameters --------------
-#define UART_TX_WAIT_LOOP_COUNT 2
+#define UART_TX_WAIT_LOOP_COUNT 100
 #define PASS_CHAR 'P'
 #define FAIL_CHAR 'F'
 
@@ -36,7 +36,9 @@ data_region_end:
 //#define START_ADDRESS data_region
 //#define END_ADDRESS data_region_end
 #define START_ADDRESS 0x90000000L
-#define END_ADDRESS START_ADDRESS + (8+1)*1024// enough for L1d eviction
+//#define TEST_BYTE_COUNT ((8+1)*1024) // enough for L1d eviction
+#define TEST_BYTE_COUNT (4*1024*1024) // full memory access
+#define END_ADDRESS (START_ADDRESS + TEST_BYTE_COUNT)
 #define STOP_ON_ERROR
 
 

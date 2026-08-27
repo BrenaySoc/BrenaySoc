@@ -33,13 +33,21 @@ object VgaSoc {
 
   }
 
-  /** configuration for the debug IOs on bank NA1 */
+  /** Type of configuration for the debug IOs on bank NA1 */
   sealed abstract class DebugBusConfig() {}
 
   object DebugBusConfig {
+
+    /** All bits to zeros */
     case object Zeros extends DebugBusConfig
+
+    /** 16 bit free running counter at processing frequency, useful to test analyser connection */
     case object FreeRunningCounter extends DebugBusConfig
+
+    /** Resets, clocks and jtga signals, useful for reset sequence debug */
     case object JtagAndResets extends DebugBusConfig
+
+    /** PSRAM signal mirror and fifo control signals, with UART tx */
     case object PsramDebug extends DebugBusConfig
   }
 }
@@ -50,21 +58,19 @@ class VgaSoc(
     debugWiring: DebugWiring = DebugWiring.FpgaJtag
 ) extends Component {
 
-  // Put the bits of an 16 bit free running counter on the NA_A ## NA_B IOs
-  val counterOnDebugBus = false
-
   var p = new VgaSocParam()
   p.vexii.extension.add(additionalIsa: _*)
 
   p.ramElf = Some(new File(ramElfPathName))
 
-  /* change the default config here
-
+  // TODO for some reason, when P&R with graphic the core stop at h3C, understand why
   p.withGraphic = false
+
+  /* change the default config here
   p.withMcu = true
   p.withMcuJtag = true
 
-  p.vexii.fetchL1Enable = false
+  p.vexii.fetchL1Enable = true
   p.vexii.lsuL1Enable = true
   p.vexii.lsuHardwarePrefetch = "none" // "rpt" // use 2 RAM_HALF
 
@@ -72,7 +78,8 @@ class VgaSoc(
   p.vexii.withBtb = false
    */
 
-  val debugBusConfig: DebugBusConfig = DebugBusConfig.Zeros
+  // Change this to select one of the different debug signal wiring to the 16 bit debug bus.
+  val debugBusConfig: DebugBusConfig = DebugBusConfig.PsramDebug
 
   p.legalize()
 
@@ -232,8 +239,8 @@ class VgaSoc(
 
           // Deactivate these allows to reduces the noise at high f_clk on
           // the signal analyser.
-          val withProgramCounter = false
-          val withSioRamInternalSignals = false
+          val withProgramCounter = true
+          val withSioRamInternalSignals = true
 
           Fiber patch new Area {
             if (p.withMcu && withProgramCounter) {

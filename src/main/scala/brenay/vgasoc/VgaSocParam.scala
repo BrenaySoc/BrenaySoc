@@ -55,11 +55,14 @@ class VgaSocParam {
   vexii.relaxedBranch = true
   vexii.withIterativeShift = false
   vexii.regFileSync = true
-  vexii.withCaches()
-  vexii.fetchL1Ways = 1
-  vexii.lsuL1Ways = 1
+  vexii.fetchL1Enable = true
   vexii.fetchL1Sets = 32 * 1024 / (64 * 8) // this is so the I cache fit into one CC_BRAM_40K
+  vexii.fetchL1Ways = 1
+  vexii.lsuL1Enable = true
+  vexii.lsuL1Ways = 1
   vexii.lsuL1Sets = 32 * 1024 / (64 * 8) // this is so the D cache fit into one CC_BRAM_40K
+  vexii.withLsuBypass = true
+  vexii.lsuHardwarePrefetch = "none"
   vexii.withBtb = false
   vexii.withGShare = false
   vexii.gshareBytes = 2 * 1024 // fit in one CC_BRAM_20K

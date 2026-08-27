@@ -1,4 +1,4 @@
-# BrenaySoC
+# Brenay SoC
 
 Brenay is a System on Chip tailor-made for the 
 [Cologne Chip GateMate FPGA](https://colognechip.com/programmable-logic/gatemate/)
@@ -17,7 +17,7 @@ Features:
 - interconnect with [Tilelink-UH](https://www.sifive.com/document-file/tilelink-spec-1.9.3)
   bus protocol
 - multi-clock domain design, targeting `extMems` at 100 MHz, `processing`
-  at >= 25 MHz, `graphic` at 25.175 MHz, not independent of each other and
+  at >= 25 MHz, `graphic` at 25.175 MHz, independent of each other and
   communicating with hardware FIFOs
 - full [SpinalHDL](https://spinalhdl.github.io/SpinalDoc-RTD/master) 
   RTL with possible VHDL/verilog integration
@@ -42,16 +42,14 @@ pin 2 and 3.
 
 Working RTL:
 
-- [x] 80 MHz single PSRAM + Vexii 25 MHz with L1d+i, branch prediction and RTP cache prefetch
+- [x] 80 MHz single PSRAM + Vexii 25 MHz with L1d+i
 - [x] Bank EB1 JTAG debug at 5 MHz
 - [x] 115.2 kbps UART on USB tty through RP2040
 - [x] clean simultaneous reset of all domains after 64 clock of the slowest domain
-- [x] post bitstream reset (USR_RSTN), 
 
 Working firmware: 
 
-- [x] assembler PSRAM full read-write test
-- [x] assembler uart test
+- [x] assembler PSRAM full read-write test with UART output
 
 RTL roadmap:
 
@@ -59,16 +57,16 @@ RTL roadmap:
 - [ ] add GPU slave command bus from MCU
 - [ ] implement an example GPU with a demo application
 - [ ] support for dual PSRAM
-- [ ] support PSRAM write width of 8 and 16 bits (useful for uncached access 
+- [ ] support PSRAM Tilelink PUT width of 8 and 16 bits (useful for uncached access 
       or L1d-less core) 
 - [ ] optimize PSRAM serializer to reach 100 MHz
 - [ ] optimize VexiiRiscv to reach > 25 MHz
 - [ ] optimize VexiiRiscv BRAM usage
-- [ ] mcu JTAG debug using modified firmware RP2040 for single USB connection
+- [ ] mcu JTAG debug using modified dirty-jtag firmware RP2040 for single USB connection
       for power, bitstream and firmware load and debug
 - [ ] add QPI flash memory read in burst capable mode
 - [ ] add flash memory programming
-- [ ] currently using mrcmry/SpinalHDL/brenay-soc-improvements,
+- [ ] currently using branch fork BrenaySoc/SpinalHDL/brenay-soc-improvements,
       get improvement into upstream
 - [ ] make vexii truly using the same SpinalHDL lib as the main project
 - [ ] integrate automatic asm build to the test workflow
@@ -110,14 +108,16 @@ The number of RAM_HALF could probably be optimized.
 
 ```sh
 git submodule update --init # no --recursive to avoid duplication
-git submodule update --init --recursive  ext/VexiiRiscv/` # currently needed to build vexii
+git submodule update --init --recursive  ext/VexiiRiscv/ # currently needed to build vexii
 ```
 
 ## Tools installation
 
-Install spinalHDL dependencies (Ubuntu 24.04):
+[Install SpinalHDL dependencies](https://spinalhdl.github.io/SpinalDoc-RTD/master/SpinalHDL/Getting%20Started/Install%20and%20setup.html)
 
-```bash
+ For Ubuntu 24.04, with Verilator being installed later with OSS CAD Suite, this should be enough:
+
+```sh
 sudo apt-get update
 sudo apt-get install openjdk-21-jdk-headless curl git
 curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
@@ -127,16 +127,18 @@ chmod +x cs
 source ~/.profile
 ```
 
-Install oss-cad-suite from <https://github.com/YosysHQ/oss-cad-suite-build/releases/tag/2025-08-01>.
+Install oss-cad-suite from <https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-08-26>.
 
-```bash
-wget https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-08-01/oss-cad-suite-linux-x64-20250801.tgz
-sudo tar xzf oss-cad-suite-linux-x64-20250801.tgz -C /opt/
+For linux x86:
+```sh
+wget https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-08-26/oss-cad-suite-linux-x64-20260826.tgz
+sudo rm  -rf /opt/oss-cad-suite
+sudo tar xzf oss-cad-suite-linux-x64-20260826.tgz -C /opt/
 ```
 
 Create a `.env` file :
 
-```bash
+```sh
 source /opt/oss-cad-suite/environment
 
 # This is to use the same spinal source for vexii submodule and brenay.
@@ -144,7 +146,7 @@ source /opt/oss-cad-suite/environment
 export SPINALHDL_PATH="$(realpath "$(dirname "${BASH_SOURCE[0]}")/ext/SpinalHDL")"
 export SPINALHDL_FROM_SOURCE=1
 
-# Insure test are reproducible with 1 but allows testing with different seeds.
+# Ensure test are reproducible with 1 but allows testing with different seeds.
 export SPINAL_SIM_SEED="1"  
 ```
 
@@ -156,7 +158,7 @@ Install:
  - optionally [Code Spell Checker](https://github.com/streetsidesoftware/vscode-spell-checker)
 
 The following config seems to work fine. Currently (codium 1.126, scalameta 1.70.0)
-the Bloop build server do not work, execute "View -> Command Palette ... -> Metals: Switch
+the Bloop build server does not work, execute "View -> Command Palette ... -> Metals: Switch
 build server" and select "sbt".
 
 ```json
@@ -198,12 +200,11 @@ build server" and select "sbt".
 ```
 
 
-
 ## Run tests
 
-In the OSS ready terminal, run this:
+In `.env` sourced shell, run this:
 
-```bash
+```sh
 make -C src/test/asm/mem_access
 make -C src/test/asm/uart_tx/
 
@@ -215,18 +216,54 @@ sbt "testOnly brenay.vgasoc.ProcessingSim -- -oF" # output full call stack
 for seed in {1..10}; do SPINAL_SIM_SEED=$seed sbt "testOnly *.GmStreamFifoCCSim" || break; done
 ```
 
+## Build bitstream for the Olimex
+
+The build system is entirely done in scala.
+
+TODO currently you still need to run make for the asm test codes:
+
+```sh
+make -C src/test/asm/mem_access
+```
+
+To build the FPGA bitstream, do:
+
+```sh
+runMain brenay.vgasoc.board.olimex.gatemate_a1_evb.Build
+```
+
+connect the USB and run:
+
+```sh
+runMain brenay.vgasoc.board.olimex.gatemate_a1_evb.Load
+```
+
+Reset the target with the FPGA_RST1 button. Run in a terminal the following command:
+```sh 
+plink -serial /dev/ttyACM0 -sercfg 115200,8,n,1,N
+```
+
+The firmware is full write, then reread of the PSRAM test. It outputs a single
+'P' char when successful and stop and output 'F' when there is an error.
+The code can be found in `src/test/asm/mem_access/src/crt.S`. If everything
+is fine, you should see something like:
+
+```sh
+PPPPPPPPP
+```
+
 ## Scala auto formatting
 
 To check if the formatting is correct:
 
-```bash
+```sh
 sbt scalafmtCheckAll
 sbt "scalafixAll --test"
 ```
 
 To format in place all the scala files:
 
-```bash
+```sh
 sbt "scalafixAll;scalafmtAll"
 ```
 
@@ -243,11 +280,10 @@ It's important to run scalafmt after scalafix, because it rearrange some imports
 
 Currently working on ubuntu 24.04 x86_64:
 
-```bash
+```sh
 download from https://www.segger.com/downloads/jlink/:
 sudo apt-get install ./JLink_Linux_V966_x86_64.deb 
 ```
-
 
 ### Debug with JLink
 
@@ -255,13 +291,13 @@ See [part of Vexii tutorial about openocd](https://spinalhdl.github.io/VexiiRisc
 
 Start server on one terminal:
 
-```bash
+```sh
 /usr/bin/openocd -f src/test/asm/jlink.tcl
 ```
 
 Use telnet to debug using openocd directly:
 
-```bash
+```sh
 telnet localhost 4444
 
 halt
