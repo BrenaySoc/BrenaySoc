@@ -6,9 +6,9 @@ Brenay is a System on Chip tailor-made for the
 
 The goal is to have reference design using modern languages that can be extended/forked
 as a base for low power/cost optimized industrial solutions. The current first
-target is the Olimex GateMateA1-EVB board for a MCU + GPU + VGA controller
-for a vintage 4:4:4 game design platform, but components are aimed at being reusable
-for other designs.
+target is the [Olimex GateMateA1-EVB](https://www.olimex.com/Products/FPGA/GateMate/GateMateA1-EVB/open-source-hardware)
+board for a MCU + GPU + VGA controller for a vintage 4:4:4 game design platform,
+but components are aimed at being reusable for other designs.
 
 Features:
 
@@ -23,12 +23,12 @@ Features:
   RTL with possible VHDL/verilog integration
 - build system based on Scala [sbt](https://www.scala-sbt.org/)
   for simulation, synthesis, place & route, flash
-- firmware in full Rust + [Embassy](https://embassy.dev) or bare-metal C
+- firmware in full Rust + [Embassy](https://embassy.dev) or bare-metal C (TODO)
 - full open source toolchain with [Yosys](https://yosyshq.readthedocs.io/projects/yosys/en/latest/introduction.html)
   for synthesis, place and route and bitstream generation (official GateMate toolchain)
 - JTAG debug
-- github CI integration
-
+- github CI integration (TODO)
+- MIT license (same as `spinal.lib`)
 
 ## Architecture
 
@@ -36,7 +36,7 @@ Features:
 
 ## Current status and roadmap
 
-The project is still pretty experimental and subject to change.
+The project is still in early stage and subject to change.
 
 All frequencies are stated for `nextpnr -o fpga_mode=speed -o time_mode=worst`, i.e.
 -40° to +125 °C junction temperature operating range for 1.1V core voltage.
@@ -45,10 +45,13 @@ pin 2 and 3.
 
 Working RTL:
 
-- [x] 80 MHz single PSRAM + Vexii 25 MHz with L1d+i
+- [x] 80 MHz single PSRAM + Vexii 25 MHz with L1d+i 
 - [x] Bank EB1 JTAG debug at 5 MHz
 - [x] 115.2 kbps UART on USB tty through RP2040
 - [x] clean simultaneous reset of all domains after 64 clock of the slowest domain
+
+The extMems clock domain pass P&R above 100 MHz frequently with some seeds but
+some optimization is still needed so it works every time with every configurations.
 
 Working firmware: 
 
@@ -219,7 +222,7 @@ sbt "testOnly brenay.vgasoc.ProcessingSim -- -oF" # output full call stack
 for seed in {1..10}; do SPINAL_SIM_SEED=$seed sbt "testOnly *.GmStreamFifoCCSim" || break; done
 ```
 
-## Build bitstream for the Olimex
+## Build bitstream for the Olimex GateMateA1-EVB board
 
 The build system is entirely done in scala.
 
@@ -232,13 +235,13 @@ make -C src/test/asm/mem_access
 To build the FPGA bitstream, do:
 
 ```sh
-runMain brenay.vgasoc.board.olimex.gatemate_a1_evb.Build
+sbt "runMain brenay.vgasoc.board.olimex.gatemate_a1_evb.Build"
 ```
 
 connect the USB and run:
 
 ```sh
-runMain brenay.vgasoc.board.olimex.gatemate_a1_evb.Load
+sbt "runMain brenay.vgasoc.board.olimex.gatemate_a1_evb.Load"
 ```
 
 Reset the target with the FPGA_RST1 button. Run in a terminal the following command:
@@ -246,10 +249,10 @@ Reset the target with the FPGA_RST1 button. Run in a terminal the following comm
 plink -serial /dev/ttyACM0 -sercfg 115200,8,n,1,N
 ```
 
-The firmware is full write, then reread of the PSRAM test. It outputs a single
-'P' char when successful and stop and output 'F' when there is an error.
-The code can be found in `src/test/asm/mem_access/src/crt.S`. If everything
-is fine, you should see something like:
+The firmware of the `internalRam` initialization do is full write, then reread 
+of the PSRAM. It outputs a single 'P' char when successful and stop and output
+'F' when there is an error. The code can be found in `src/test/asm/mem_access/src/crt.S`.
+If everything is fine, you should see something like:
 
 ```sh
 PPPPPPPPP
@@ -291,6 +294,9 @@ sudo apt-get install ./JLink_Linux_V966_x86_64.deb
 ### Debug with JLink
 
 See [part of Vexii tutorial about openocd](https://spinalhdl.github.io/VexiiRiscv-RTD/master/VexiiRiscv/Tutorial/index.html#connecting-with-openocd-to-the-simulation).
+
+Note that the openocd shipped with OSS is not working with jlink, but the one
+on Ubuntu 24.04 does.
 
 Start server on one terminal:
 
