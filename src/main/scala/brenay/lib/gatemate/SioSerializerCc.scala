@@ -7,6 +7,11 @@ import spinal.lib.io.TriState
 import spinal.lib.{DownCounter, History, IMasterSlave, master, slave, _} // to define IMasterSlave
 
 object SioSerializerCc {
+  // 1024 is the max for 40K that is the wider TDP width. Keep a margin because
+  // GmStreamFifoCC use "almostFull" and it may not work up to 1024. 1000 is a
+  // round number.
+  val fifoDepth = 1000
+
   object Cmd extends SpinalEnum {
     val WRITE, READ = newElement()
 
@@ -90,8 +95,8 @@ class SioSerializerCc(
     val sio = master(TriState(Bits(memPIWidth)))
   }
 
-  val downFifo = GmStreamFifoCC(DownMessage(), 10, ClockDomain.current, sioClockDomain)
-  val upFifo = GmStreamFifoCC(UpMessage(), 10, sioClockDomain, ClockDomain.current)
+  val downFifo = GmStreamFifoCC(DownMessage(), fifoDepth, ClockDomain.current, sioClockDomain)
+  val upFifo = GmStreamFifoCC(UpMessage(), fifoDepth, sioClockDomain, ClockDomain.current)
 
   io.sioBus.downStream <> downFifo.io.push
   io.sioBus.upStream <> upFifo.io.pop

@@ -51,8 +51,12 @@ class SioRam(
     val up = slave port tilelink.Bus(p)
 
     val sioBus = master(SioSerializerCc.Bus())
-
   }
+
+  assert(
+    (busParam.beatMax + 5) <= SioSerializerCc.fifoDepth,
+    "fifo must have margin for burst and command + waitstate"
+  )
 
   // register tilelink outputs
   io.up.a.ready.setAsReg() init (False)
@@ -65,12 +69,6 @@ class SioRam(
   io.up.d.payload.param.clearAll() // spec mandate zero if not used
 
   assert(busParam.dataWidth == 32, s"bus of ${busParam.dataWidth} bits not supported")
-
-  // We have to register A message because when we accept a tilelink beat, it
-  // signals can change afterward (see "4.1. Flow Control Rules" part
-  // of tilelink spec).
-  // For fields that does not change between beats, we use up.d registered values.
-  // val aOpcode = Reg(io.up.a.payload.opcode)
 
   // working copy that is used as output data
   val outData = Reg(busParam.data)
@@ -239,6 +237,11 @@ class SioRam(
   val aFsm = new StateMachine {
     setEncoding(binaryOneHot)
 
+    // We have to register A message because when we accept a tilelink beat, it
+    // signals can change afterward (see "4.1. Flow Control Rules" part
+    // of tilelink spec).
+    // For fields that does not change between beats, we use up.d registered values.
+    // val aOpcode = Reg(io.up.a.payload.opcode)
     val aOpcode = Reg(Opcode.A)
     val aSize = Reg(busParam.size)
     val aParam = Reg(Bits(3 bits))
