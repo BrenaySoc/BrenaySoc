@@ -41,20 +41,20 @@ sealed abstract class BramDataWidth(val bits: Int) {
   }
 
   /** Checks if this width is valid for a context with the given maximum width.
-    * BIT0 always returns false (not a valid operational width).
+    * Invalid always returns false (not a valid operational width).
     * Otherwise, checks if this.bits <= maxWidth.bits.
     *
-    * Example: For 20K mode (max=20), use isValidUpTo(BIT20)
-    *          For 40K mode (max=80), use isValidUpTo(BIT80)
+    * Example: For 20K mode (max=20), use isValidUpTo(Bit20)
+    *          For 40K mode (max=80), use isValidUpTo(Bit80)
     */
   def isValidUpTo(maxWidth: BramDataWidth): Boolean = {
-    this != BramDataWidth.BIT0 && this.bits <= maxWidth.bits
+    this != BramDataWidth.Invalid && this.bits <= maxWidth.bits
   }
 
   /** Asserts this width is valid up to the given maximum width.
     * Throws IllegalArgumentException if invalid.
     *
-    * @param maxWidth  The maximum allowed width (e.g., BIT20 for 20K, BIT80 for 40K)
+    * @param maxWidth  The maximum allowed width (e.g., Bit20 for 20K, Bit80 for 40K)
     * @param prefix   Optional message prefix for error reporting
     */
   def assertValidUpTo(maxWidth: BramDataWidth, prefix: String = ""): Unit = {
@@ -68,28 +68,28 @@ sealed abstract class BramDataWidth(val bits: Int) {
 }
 
 object BramDataWidth {
-  // BIT0 is the default value used in CcFifo40K - not valid for operational use
-  case object BIT0 extends BramDataWidth(0)
+  // Used for the default value in CcFifo40K - not valid for operational use
+  case object Invalid extends BramDataWidth(0)
 
   // Common to 20K and 40K/FIFO
-  case object BIT1 extends BramDataWidth(1)
-  case object BIT2 extends BramDataWidth(2)
-  case object BIT5 extends BramDataWidth(5)
-  case object BIT10 extends BramDataWidth(10)
-  case object BIT20 extends BramDataWidth(20)
+  case object Bit1 extends BramDataWidth(1)
+  case object Bit2 extends BramDataWidth(2)
+  case object Bit5 extends BramDataWidth(5)
+  case object Bit10 extends BramDataWidth(10)
+  case object Bit20 extends BramDataWidth(20)
 
   // 40K/FIFO only
-  case object BIT40 extends BramDataWidth(40)
-  case object BIT80 extends BramDataWidth(80)
+  case object Bit40 extends BramDataWidth(40)
+  case object Bit80 extends BramDataWidth(80)
 
-  /** All defined widths (including BIT0) */
-  val all: List[BramDataWidth] = List(BIT0, BIT1, BIT2, BIT5, BIT10, BIT20, BIT40, BIT80)
+  /** All defined widths (including Invalid) */
+  val all: List[BramDataWidth] = List(Invalid, Bit1, Bit2, Bit5, Bit10, Bit20, Bit40, Bit80)
 
-  /** Operational widths only (excluding BIT0) */
+  /** Operational widths only (excluding Invalid) */
   val operational: List[BramDataWidth] = all.filter(_.bits > 0)
 
   /** Returns the exact width matching the bit count */
-  def exact(bits: Int): BramDataWidth = {
+  def exactWidth(bits: Int): BramDataWidth = {
     all
       .find(_.bits == bits)
       .getOrElse(
@@ -102,7 +102,7 @@ object BramDataWidth {
   /** Returns minimum valid width >= requested for the given max width.
     * Fails if requested > maxWidth.bits.
     */
-  def minimumFor(maxWidth: BramDataWidth, requestedBits: Int): BramDataWidth = {
+  def minimumWidthFor(maxWidth: BramDataWidth, requestedBits: Int): BramDataWidth = {
     operational
       .find(w => w.bits >= requestedBits && w.bits <= maxWidth.bits)
       .getOrElse(
@@ -110,6 +110,25 @@ object BramDataWidth {
           s"$requestedBits bits exceeds maximum of ${maxWidth.bits} bits"
         )
       )
+  }
+
+  /** Return the depth of the fifo based on it width.
+    *
+    * From primitive lib pdf doc:
+    * "Since the FIFO mode is an extension to the TDP / SDP 40K mode, it supports the same
+    * bitwidth configurations as shown in Table 6.2."
+    */
+  def depthFor(width: BramDataWidth): Int = {
+    width match {
+      case Bit1    => 32768
+      case Bit2    => 16384
+      case Bit5    => 8192
+      case Bit10   => 4096
+      case Bit20   => 2048
+      case Bit40   => 1024
+      case Bit80   => 512
+      case Invalid => throw new IllegalArgumentException("usage of Invalid width")
+    }
   }
 }
 
@@ -141,8 +160,8 @@ class CcFifo40K(
     almostFullOffset: Int = 0,
     almostEmptyOffset: Int = 0,
     dynStatSelect: FifoDynStatMode = FifoDynStatMode.ViaInputs,
-    aWidth: BramDataWidth = BramDataWidth.BIT0,
-    bWidth: BramDataWidth = BramDataWidth.BIT0,
+    aWidth: BramDataWidth = BramDataWidth.Invalid,
+    bWidth: BramDataWidth = BramDataWidth.Invalid,
     ramMode: RamMode = RamMode.SimpleDualPort,
     fifoMode: FifoMode = FifoMode.Sync,
     aClkInv: Boolean = false,

@@ -11,7 +11,12 @@ import brenay.lib.blackbox.cologne.gatemate.{
   RamMode
 }
 
-/** @param dataType
+/** A Spinal wrapper with Stream to the CcFifo40K primitive
+  *
+  * It automatically chose a right width, and take care of with wider that
+  * the primitive max with.
+  *
+  * @param dataType
   * @param depth
   * @param pushClock
   * @param popClock
@@ -42,8 +47,8 @@ class GmStreamFifoCC[T <: Data](
   val hwFifos = for (hwFifoIndex <- 0 until hwFifoCount) yield new Area {
 
     val fifoPrimitiveWidth =
-      BramDataWidth.minimumFor(
-        BramDataWidth.BIT40,
+      BramDataWidth.minimumWidthFor(
+        BramDataWidth.Bit40,
         remainingBits.min(maxPrimitiveWidth)
       )
 

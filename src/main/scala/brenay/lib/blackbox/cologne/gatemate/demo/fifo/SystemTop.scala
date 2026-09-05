@@ -53,15 +53,15 @@ case class SystemTop() extends Component {
     resetActiveLevel = HIGH
   )
   val coreClockDomain = ClockDomain(pll.io.clk0, resetGenerationArea.reset, config = coreConfig)
-  
+
   val coreArea = new ClockingArea(coreClockDomain) {
 
     // FIFO instantiation with default values and inputs set to 0
     val fifo =
       new CcFifo40K(
         ramMode = RamMode.TrueDualPort,
-        aWidth = BramDataWidth.BIT40,
-        bWidth = BramDataWidth.BIT40,
+        aWidth = BramDataWidth.Bit40,
+        bWidth = BramDataWidth.Bit40,
         aDoReg = false
       )
     fifo.io.aDi := 0
