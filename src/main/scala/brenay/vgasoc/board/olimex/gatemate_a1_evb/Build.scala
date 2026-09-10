@@ -16,10 +16,7 @@ object Build extends App {
 
   val PRINT_METRICS = true
 
-  val ossCadSuitePath = if (false) { "/home/marc/electrotec/spinalhdl/oss-cad-suite-20260524/" }
-  else {
-    "/opt/oss-cad-suite/"
-  }
+  val ossCadSuitePath = "/opt/oss-cad-suite/"
 
   val genStep = new SpinalGenVerilogStep()
   val synthStep = new YosysSynthGatemateStep(ossCadSuitePath + "bin/yosys")

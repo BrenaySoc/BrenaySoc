@@ -329,4 +329,5 @@ reg pc 0x80000000
 * [`openFPGALoader` guide for `udev`](https://umarcor.github.io/openFPGALoader/guide/install.html#udev-rules)
 * [`udev` config for openFPGALoader](https://github.com/trabucayre/openFPGALoader/blob/master/99-openfpgaloader.rules
 )
-
+* [no_std_tetris](https://github.com/Hahihula/no_std_tetris) a good candidate
+  for a simple game where the GPU could be simple 
