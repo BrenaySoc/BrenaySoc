@@ -55,7 +55,7 @@ object Build extends App {
 
   import brenay.lib.flows.PlaceRouteGatemateStep._
 
-  Seq(11, 12, 13, 14).find { seed =>
+  Seq(14, 15, 16, 17).find { seed =>
     try {
       println(s"seed=$seed")
       val pnrExecution = synthExecution.thenExecute(

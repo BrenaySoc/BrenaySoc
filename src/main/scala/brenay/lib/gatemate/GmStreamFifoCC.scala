@@ -93,7 +93,7 @@ class GmStreamFifoCC[T <: Data](
     }
 
     resetDomain.config.resetActiveLevel match {
-      case HIGH => primitive.io.fRstN := ~resetDomain.readResetWire
+      case HIGH => primitive.io.fRstN := !resetDomain.readResetWire
       case LOW  => primitive.io.fRstN := resetDomain.readResetWire
     }
 
@@ -104,10 +104,10 @@ class GmStreamFifoCC[T <: Data](
   }
 
   val pushDomain = new ClockingArea(pushClock) {
-    io.push.ready := ~hwFifos(0).primitive.io.fAlmostFull
+    io.push.ready := !hwFifos(0).primitive.io.fAlmostFull
 
     assert(
-      hwFifos.map(~_.primitive.io.fAlmostFull).andR === ~hwFifos(0).primitive.io.fAlmostFull,
+      hwFifos.map(!_.primitive.io.fAlmostFull).andR === !hwFifos(0).primitive.io.fAlmostFull,
       "fifos work in lockstep and should have equal values"
     )
   }
@@ -124,11 +124,11 @@ class GmStreamFifoCC[T <: Data](
     io.pop.valid := valid
 
     for (fifo <- hwFifos) yield new Area {
-      fifo.primitive.io.aEn := (io.pop.fire || ~valid) && ~hwFifos(0).primitive.io.fEmpty
+      fifo.primitive.io.aEn := (io.pop.fire || !valid) && !hwFifos(0).primitive.io.fEmpty
     }
 
     assert(
-      hwFifos.map(~_.primitive.io.fEmpty).andR === ~hwFifos(0).primitive.io.fEmpty,
+      hwFifos.map(!_.primitive.io.fEmpty).andR === !hwFifos(0).primitive.io.fEmpty,
       "fifos work in lockstep and should have equal values "
     )
   }

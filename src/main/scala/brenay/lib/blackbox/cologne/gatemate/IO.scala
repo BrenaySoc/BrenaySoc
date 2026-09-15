@@ -255,7 +255,7 @@ class CcOBuf(
  TODO synthesised but not place and route passed with:
     val writing = Reg(Bool)
 
-    writing := ~writing
+    writing := !writing
 
     val bufs = for (i <- 0 until 8) yield new Area {
       val buf = new CcIoBuf()
@@ -270,8 +270,8 @@ class CcOBuf(
 
       oddr.io.clk := ClockDomain.current.readClockWire
       oddr.io.ddr := ClockDomain.current.readClockWire
-      oddr.io.d0 := RegNext(~iddr.io.q1)
-      oddr.io.d1 := RegNext(~iddr.io.q0)
+      oddr.io.d0 := RegNext(!iddr.io.q1)
+      oddr.io.d1 := RegNext(!iddr.io.q0)
       buf.io.a := oddr.io.q
     }
  */

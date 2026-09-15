@@ -17,7 +17,7 @@ case class SystemTop() extends Component {
 
   noIoPrefix()
 
-  val aReset = ~io.arst_n
+  val aReset = !io.arst_n
 
   val fClock = 300 MHz
 
@@ -42,7 +42,7 @@ case class SystemTop() extends Component {
     )
   ) {
     // Use double flip-flop to avoid metastability issues.
-    val externalReset = RegNext(RegNext(~io.arst_n, True), True)
+    val externalReset = RegNext(RegNext(!io.arst_n, True), True)
     val pllLocked = RegNext(RegNext(pll.io.usrPllLocked, False), False)
 
     val reset = RegNext(externalReset || !pllLocked, True)

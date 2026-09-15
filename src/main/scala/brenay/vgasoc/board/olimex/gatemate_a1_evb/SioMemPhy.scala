@@ -80,7 +80,7 @@ class SioMemPhy(
 
   val csOBuf =
     new CcOBuf(vIo = vIo, drive = drive, slew = slew, ffObf = invertedCockTimingClosureScheme)
-  csOBuf.io.a := ~io.cs
+  csOBuf.io.a := !io.cs
   io.externalIos.csN := csOBuf.io.o
 
   val ios = for (i <- 0 until io.sio.read.getBitsWidth) yield new Area {
@@ -93,7 +93,7 @@ class SioMemPhy(
         ffObf = invertedCockTimingClosureScheme
       )
 
-    ioBuf.io.t := ~io.sio.writeEnable
+    ioBuf.io.t := !io.sio.writeEnable
     ioBuf.io.a := io.sio.write(i)
     io.sio.read(i) := ioBuf.io.y
 
