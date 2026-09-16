@@ -125,7 +125,7 @@ git submodule update --init --recursive  ext/VexiiRiscv/ # currently needed to b
 
 ```sh
 sudo apt-get update
-sudo apt-get install openjdk-21-jdk-headless curl git
+sudo apt-get install openjdk-21-jdk-headless curl git liblz4-dev
 curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
 chmod +x cs
 # should find the just installed jdk, agree to cs' questions for adding to your PATH
