@@ -1,4 +1,4 @@
-package brenay.lib.blackbox.cologne.gatemate
+package brenay.lib.gatemate
 
 import spinal.core._
 import spinal.core.sim._
