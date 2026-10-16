@@ -53,7 +53,9 @@ object Build extends App {
 
   import brenay.lib.flows.PlaceRouteGatemateStep._
 
-  Seq(14, 15, 16, 17).find { seed =>
+  val workingSeed = 14 // known working seed from past attempts
+
+  val routedSeed = (workingSeed until workingSeed + 4).find { seed =>
     try {
       println(s"seed=$seed")
       val pnrExecution = synthExecution.thenExecute(
@@ -89,6 +91,12 @@ object Build extends App {
       case e: Throwable =>
         throw e
     }
+  }
+
+  if (routedSeed.isEmpty) {
+    throw new RuntimeException("Place & route failed for all seeds")
+  } else {
+    println(s"routedSeed=$routedSeed")
   }
 
 }
