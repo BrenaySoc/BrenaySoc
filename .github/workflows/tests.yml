@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   tests:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 60
     env:
       OSS_CAD_DOWNLOAD_URL: https://github.com/YosysHQ/oss-cad-suite-build/releases/download
