@@ -1,7 +1,9 @@
 ThisBuild / version := "0.1"
 ThisBuild / scalaVersion := "2.12.18"
 ThisBuild / organization := "brenay"
+
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
+ThisBuild / semanticdbEnabled := true
 
 //---------------- general dependencies -----------
 val scalatest = "org.scalatest" %% "scalatest" % "3.2.20"
