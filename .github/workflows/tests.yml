@@ -27,7 +27,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          submodules: true
+          # TODO fix multiple checkout of SpinalHDL
+          submodules: recursive
 
       - name: Install apt based dependencies
         run: |
