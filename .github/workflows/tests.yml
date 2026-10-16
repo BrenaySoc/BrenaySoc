@@ -62,29 +62,17 @@ jobs:
           make -C src/test/asm/mem_access/ RISCV_PATH=$RISCV_DIR/ RISCV_NAME=riscv-none-elf
           make -C src/test/asm/uart_tx/ RISCV_PATH=$RISCV_DIR/ RISCV_NAME=riscv-none-elf
 
-      # Compute OSS CAD dir here as it is not available in job-level env.
-      # We use the tool cache as it make caching easier.
       - name: Set OSS CAD Suite directory
         run: echo "OSS_CAD_DIR=$RUNNER_TOOL_CACHE/oss-cad-suite/$OSS_CAD_VERSION" >> "$GITHUB_ENV"
 
-      - name: Cache OSS CAD Suite
-        id: cache-oss-cad
-        uses: actions/cache@v6
-        with:
-          path: ${{ env.OSS_CAD_DIR }}
-          key: oss-cad-suite-pruned-${{ env.OSS_CAD_VERSION }}-${{ runner.os }}
-
-      # Extract only that we need, to go from 2.6 GB to ~1.2 GB installed files.
+      # Extract only what we need, to avoid decompressing the biggest chunks.
       # We keep:
       # - verilator, iverilog, ghdl : SpinalSim backends
-      # - yosys (+ synth_gatemate)   : synthesis
-      # - nextpnr-himbaechel         : GateMate place & route
-      # - gmpack                     : GateMate bitstream packing (GmpackStep)
-      # - sby, yices, z3             : SpinalHDL formal verification backend
-      # tar --exclude skip the biggest chunks during extraction, the find
-      # whitelist-complement below removes the rest to reduce cached size.
+      # - yosys (+ synth_gatemate) : synthesis
+      # - nextpnr-himbaechel       : GateMate place & route
+      # - gmpack                   : GateMate bitstream packing (GmpackStep)
+      # - sby, yices, z3           : SpinalHDL formal verification backend
       - name: Install OSS cad suite
-        if: steps.cache-oss-cad.outputs.cache-hit != 'true'
         run: |
           mkdir -p "$OSS_CAD_DIR"
           curl -sL ${OSS_CAD_DOWNLOAD_URL}/${OSS_CAD_VERSION}/oss-cad-suite-linux-x64-${OSS_CAD_VERSION//[^0-9]/}.tgz \
@@ -97,30 +85,8 @@ jobs:
                 --exclude='oss-cad-suite/share/icebox' \
                 --exclude='oss-cad-suite/share/trellis' \
                 --exclude='oss-cad-suite/examples' \
+                --exclude='oss-cad-suite/share/nextpnr/himbaechel/gowin' \            
                 --exclude='oss-cad-suite/super_prove'
-
-          cd "$OSS_CAD_DIR"
-
-          # Remove everything not whitelisted in bin/ and libexec/
-          find bin -maxdepth 1 -mindepth 1 \
-            ! -name 'yosys*' ! -name 'verilator*' ! -name 'iverilog*' ! -name 'vvp*' \
-            ! -name 'ghdl*' ! -name 'sby' ! -name 'tabbypy3' ! -name 'yices*' ! -name 'z3*' \
-            ! -name 'nextpnr-himbaechel*' ! -name 'gmpack*' -exec rm -rf {} +
-          find libexec -maxdepth 1 -mindepth 1 \
-            ! -name 'yosys*' ! -name 'verilator*' ! -name 'nextpnr-himbaechel*' \
-            ! -name 'ivl*' ! -name 'ghdl*' ! -name 'vhdlpp*' ! -name 'z3*' ! -name 'yices*' \
-            ! -name 'python3*' ! -name 'sby*' -exec rm -rf {} +
-
-          # share/yosys must be kept whole : gatemate cells, ghdl/slang plugins,
-          # and the sby_*.py modules used by SymbiYosys live in it.
-          find share -maxdepth 1 -mindepth 1 \
-            ! -name 'yosys' ! -name 'verilator' ! -name 'nextpnr' -exec rm -rf {} +
-          rm -rf share/nextpnr/himbaechel/gowin
-
-          rm -rf include examples
-
-          echo "Pruned OSS CAD Suite size:"
-          du -sh "$OSS_CAD_DIR"
 
       - name: Run the tests
         run: |
