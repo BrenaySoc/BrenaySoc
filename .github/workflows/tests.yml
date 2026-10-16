@@ -1,0 +1,102 @@
+name: Arch CI tests
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+# Cancel previous runs on the same PR to avoid unnecessary minutes.
+# Create emails and X in the git interface as a minor side effect.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      OSS_CAD_DOWNLOAD_URL: https://github.com/YosysHQ/oss-cad-suite-build/releases/download
+      OSS_CAD_VERSION: "2026-08-26"
+      XPACK_RISCV_GCC_VERSION: "13.2.0-1"
+
+      # For a CI to be usable, it should be reproducible. This env var is parsed
+      # by SpinalHDL simulation engine and used ass seed for simRandom. This insure
+      # deterministic simulation failures.
+      SPINAL_SIM_SEED: "1"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # TODO fix multiple checkout of SpinalHDL
+          submodules: recursive
+
+      - name: Use a JDK preinstalled on the runner image
+        run: echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+
+      - uses: coursier/cache-action@v8
+
+      - uses: coursier/setup-action@v3
+        with:
+          # No 'jvm: x', use the CI image one.
+          apps: sbt
+
+      - name: Verify scalaFmt and scalafix have been applied on the code
+        run: sbt 'scalafmtCheckAll;scalafixAll --check'
+
+      # Use xPack what is similar to that NaxSoftware build from source uses for its
+      # riscv-arch-test binaries (GCC 13.2).
+      # This is not the SiFive GCC 8.3 bundle form VexiiRiscv documentation.
+      - name: Set RISC-V toolchain directory
+        run: echo "RISCV_DIR=$RUNNER_TOOL_CACHE/riscv-none-elf-gcc/xpack-$XPACK_RISCV_GCC_VERSION" >> "$GITHUB_ENV"
+
+      - name: Install RISC-V toolchain
+        run: |
+          mkdir -p "$RISCV_DIR"
+          curl -sL https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v${XPACK_RISCV_GCC_VERSION}/xpack-riscv-none-elf-gcc-${XPACK_RISCV_GCC_VERSION}-linux-x64.tar.gz \
+            | tar xz -C "$RISCV_DIR" --strip-components=1
+
+      - name: Build unit test firmware codes
+        run: |
+          # xPack configures its triplet as riscv-none-elf, hence 
+          # the RISCV_NAME override for asm.mk.
+          make -C src/test/asm/mem_access/ RISCV_PATH=$RISCV_DIR/ RISCV_NAME=riscv-none-elf
+          make -C src/test/asm/uart_tx/ RISCV_PATH=$RISCV_DIR/ RISCV_NAME=riscv-none-elf
+
+      - name: Set OSS CAD Suite directory
+        run: echo "OSS_CAD_DIR=$RUNNER_TOOL_CACHE/oss-cad-suite/$OSS_CAD_VERSION" >> "$GITHUB_ENV"
+
+      # Extract only what we need, to avoid decompressing the biggest chunks.
+      # We keep:
+      # - verilator, iverilog, ghdl : SpinalSim backends
+      # - yosys (+ synth_gatemate) : synthesis
+      # - nextpnr-himbaechel       : GateMate place & route
+      # - gmpack                   : GateMate bitstream packing (GmpackStep)
+      # - sby, yices, z3           : SpinalHDL formal verification backend
+      - name: Install OSS cad suite
+        run: |
+          mkdir -p "$OSS_CAD_DIR"
+          curl -sL ${OSS_CAD_DOWNLOAD_URL}/${OSS_CAD_VERSION}/oss-cad-suite-linux-x64-${OSS_CAD_VERSION//[^0-9]/}.tgz \
+            | tar xz -C "$OSS_CAD_DIR" --strip-components=1 \
+                --exclude='oss-cad-suite/libexec/nextpnr-ice40' \
+                --exclude='oss-cad-suite/libexec/nextpnr-ecp5' \
+                --exclude='oss-cad-suite/libexec/nextpnr-machxo2' \
+                --exclude='oss-cad-suite/libexec/nextpnr-nexus' \
+                --exclude='oss-cad-suite/lib/python2.7' \
+                --exclude='oss-cad-suite/share/icebox' \
+                --exclude='oss-cad-suite/share/trellis' \
+                --exclude='oss-cad-suite/examples' \
+                --exclude='oss-cad-suite/share/nextpnr/himbaechel/gowin' \
+                --exclude='oss-cad-suite/super_prove'
+
+      - name: Run the tests
+        run: |
+          source "$OSS_CAD_DIR/environment"
+          sbt test
+
+      - name: Place & Route of Olimex VgaSoc
+        run: |
+          source "$OSS_CAD_DIR/environment"
+          sbt "runMain brenay.vgasoc.board.olimex.gatemate_a1_evb.Build"
+
+
+

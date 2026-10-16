@@ -14,7 +14,7 @@ import brenay.lib.gatemate.ReplaceBufferCCPhase
 
 /** A configuration of a flow step
   */
-abstract class Parameter(value: Any) {
+abstract class Parameter(val value: Any) {
   def name(): String
   def description(): String
   def unit(): String = ""
@@ -70,7 +70,7 @@ class PrintStreamLineHandler(stream: PrintStream) extends LineHandler {
   }
 }
 
-class OneDotPerLineHandler() {
+class OneDotPerLineHandler() extends LineHandler {
   var dotLineCount = 0
   val symbol = "."
   def readLine(line: String): Unit = {

@@ -211,7 +211,7 @@ build server" and select "sbt".
 In `.env` sourced shell, run this:
 
 ```sh
-make -C src/test/asm/mem_access
+make -C src/test/asm/mem_access/
 make -C src/test/asm/uart_tx/
 
 sbt test # all tests
