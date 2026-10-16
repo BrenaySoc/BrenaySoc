@@ -65,7 +65,7 @@ jobs:
           path: ${{ env.OSS_CAD_DIR }}
           key: oss-cad-suite-pruned-${{ env.OSS_CAD_VERSION }}-${{ runner.os }}
 
-      # Extract only that we need, to go from 2.6 GB to ~1 GB installed files.
+      # Extract only that we need, to go from 2.6 GB to ~1.2 GB installed files.
       # We keep:
       # - verilator, iverilog, ghdl : SpinalSim backends
       # - yosys (+ synth_gatemate)   : synthesis
@@ -106,16 +106,6 @@ jobs:
           find share -maxdepth 1 -mindepth 1 \
             ! -name 'yosys' ! -name 'verilator' ! -name 'nextpnr' -exec rm -rf {} +
           rm -rf share/nextpnr/himbaechel/gowin
-
-          # lib/ : python3.11 (needed by sby), LLVM (ghdl codegen), ghdl/iverilog
-          # runtimes, plus the libs the bundled python dlopens. The EDA binaries
-          # themselves are statically linked and do not need this tree.
-          find lib -maxdepth 1 -mindepth 1 \
-            ! -name 'python3.11*' ! -name 'libpython3.11*' ! -name 'libLLVM*' \
-            ! -name 'ghdl*' ! -name 'libghdl*' ! -name 'ivl*' ! -name 'libvvp*' \
-            ! -name 'ld-linux*' ! -name 'libz*' ! -name 'libffi*' ! -name 'libbz2*' \
-            ! -name 'liblzma*' ! -name 'libssl*' ! -name 'libcrypto*' \
-            ! -name 'libreadline*' ! -name 'libtinfo*' -exec rm -rf {} +
 
           rm -rf include examples
 
