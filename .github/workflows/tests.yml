@@ -20,9 +20,6 @@ jobs:
 
       OSS_CAD_VERSION: "2026-08-26"
 
-      # OSS is installed in the tool cache to simplify caching.
-      OSS_CAD_DIR: ${{ runner.tool_cache }}/oss-cad-suite/${{ env.OSS_CAD_VERSION }}
-
       # For a CI to be usable, it should be reproducible. This env var is parsed
       # by SpinalHDL simulation engine and used ass seed for simRandom. This insure
       # deterministic simulation failures.
@@ -49,6 +46,11 @@ jobs:
 
       - name: Verify scalaFmt and scalafix have been applied on the code
         run: sbt 'scalafmtCheckAll;scalafixAll --check'
+
+      # Compute OSS CAD dir here as it is not available in job-level env.
+      # We use the tool cache as it make caching easier.
+      - name: Set OSS CAD Suite directory
+        run: echo "OSS_CAD_DIR=$RUNNER_TOOL_CACHE/oss-cad-suite/$OSS_CAD_VERSION" >> "$GITHUB_ENV"
 
       - name: Cache OSS CAD Suite
         id: cache-oss-cad
