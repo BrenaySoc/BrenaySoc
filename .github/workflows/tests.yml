@@ -43,15 +43,26 @@ jobs:
       - name: Verify scalaFmt and scalafix have been applied on the code
         run: sbt 'scalafmtCheckAll;scalafixAll --check'
 
-      - name: Install bare-metal RISC-V toolchain for the unit test firmware      
+      # Ubuntu has no newlib for the riscv64-unknown-elf triplet, so apt
+      # toolchains cannot provide the -lc that asm.mk links against.
+      # Use xPack what is similar to that NaxSoftware build from source uses for its
+      # riscv-arch-test binaries (GCC 13.2).
+      # This is not the SiFive GCC 8.3 bundle form VexiiRiscv documentation.
+      - name: Set RISC-V toolchain directory
+        run: echo "RISCV_DIR=$RUNNER_TOOL_CACHE/riscv-none-elf-gcc/xpack-13.2.0-1" >> "$GITHUB_ENV"
+
+      - name: Install RISC-V toolchain
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-riscv64-unknown-elf binutils-riscv64-unknown-elf
+          mkdir -p "$RISCV_DIR"
+          curl -sL https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v13.2.0-1/xpack-riscv-none-elf-gcc-13.2.0-1-linux-x64.tar.gz \
+            | tar xz -C "$RISCV_DIR" --strip-components=1
 
       - name: Build unit test firmware codes
         run: |
-          make -C src/test/asm/mem_access/ RISCV_PATH=/usr/
-          make -C src/test/asm/uart_tx/ RISCV_PATH=/usr/
+          # xPack configures its triplet as riscv-none-elf, hence 
+          # the RISCV_NAME override for asm.mk.
+          make -C src/test/asm/mem_access/ RISCV_PATH=$RISCV_DIR/ RISCV_NAME=riscv-none-elf
+          make -C src/test/asm/uart_tx/ RISCV_PATH=$RISCV_DIR/ RISCV_NAME=riscv-none-elf
 
       # Compute OSS CAD dir here as it is not available in job-level env.
       # We use the tool cache as it make caching easier.
