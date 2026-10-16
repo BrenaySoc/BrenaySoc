@@ -17,8 +17,8 @@ jobs:
     timeout-minutes: 60
     env:
       OSS_CAD_DOWNLOAD_URL: https://github.com/YosysHQ/oss-cad-suite-build/releases/download
-
       OSS_CAD_VERSION: "2026-08-26"
+      XPACK_RISCV_GCC_VERSION: "13.2.0-1"
 
       # For a CI to be usable, it should be reproducible. This env var is parsed
       # by SpinalHDL simulation engine and used ass seed for simRandom. This insure
@@ -49,12 +49,12 @@ jobs:
       # riscv-arch-test binaries (GCC 13.2).
       # This is not the SiFive GCC 8.3 bundle form VexiiRiscv documentation.
       - name: Set RISC-V toolchain directory
-        run: echo "RISCV_DIR=$RUNNER_TOOL_CACHE/riscv-none-elf-gcc/xpack-13.2.0-1" >> "$GITHUB_ENV"
+        run: echo "RISCV_DIR=$RUNNER_TOOL_CACHE/riscv-none-elf-gcc/xpack-$XPACK_RISCV_GCC_VERSION" >> "$GITHUB_ENV"
 
       - name: Install RISC-V toolchain
         run: |
           mkdir -p "$RISCV_DIR"
-          curl -sL https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v13.2.0-1/xpack-riscv-none-elf-gcc-13.2.0-1-linux-x64.tar.gz \
+          curl -sL https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v${XPACK_RISCV_GCC_VERSION}/xpack-riscv-none-elf-gcc-${XPACK_RISCV_GCC_VERSION}-linux-x64.tar.gz \
             | tar xz -C "$RISCV_DIR" --strip-components=1
 
       - name: Build unit test firmware codes
