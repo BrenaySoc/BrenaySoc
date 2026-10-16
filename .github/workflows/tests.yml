@@ -81,6 +81,7 @@ jobs:
       # - verilator, iverilog, ghdl : SpinalSim backends
       # - yosys (+ synth_gatemate)   : synthesis
       # - nextpnr-himbaechel         : GateMate place & route
+      # - gmpack                     : GateMate bitstream packing (GmpackStep)
       # - sby, yices, z3             : SpinalHDL formal verification backend
       # tar --exclude skip the biggest chunks during extraction, the find
       # whitelist-complement below removes the rest to reduce cached size.
@@ -106,7 +107,7 @@ jobs:
           find bin -maxdepth 1 -mindepth 1 \
             ! -name 'yosys*' ! -name 'verilator*' ! -name 'iverilog*' ! -name 'vvp*' \
             ! -name 'ghdl*' ! -name 'sby' ! -name 'tabbypy3' ! -name 'yices*' ! -name 'z3*' \
-            ! -name 'nextpnr-himbaechel*' -exec rm -rf {} +
+            ! -name 'nextpnr-himbaechel*' ! -name 'gmpack*' -exec rm -rf {} +
           find libexec -maxdepth 1 -mindepth 1 \
             ! -name 'yosys*' ! -name 'verilator*' ! -name 'nextpnr-himbaechel*' \
             ! -name 'ivl*' ! -name 'ghdl*' ! -name 'vhdlpp*' ! -name 'z3*' ! -name 'yices*' \
