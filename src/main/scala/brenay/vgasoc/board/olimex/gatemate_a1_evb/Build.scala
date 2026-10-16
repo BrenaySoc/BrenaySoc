@@ -16,12 +16,10 @@ object Build extends App {
 
   val PRINT_METRICS = true
 
-  val ossCadSuitePath = "/opt/oss-cad-suite/"
-
   val genStep = new SpinalGenVerilogStep()
-  val synthStep = new YosysSynthGatemateStep(ossCadSuitePath + "bin/yosys")
+  val synthStep = new YosysSynthGatemateStep()
   val placeRouteStep =
-    new PlaceRouteGatemateStep(ossCadSuitePath + "bin/nextpnr-himbaechel")
+    new PlaceRouteGatemateStep()
 
   val flowPath = Files.createDirectories(
     Paths.get("./flow_build/brenay/vgasoc/board/olimex/gatemate_a1_evb/Build")
