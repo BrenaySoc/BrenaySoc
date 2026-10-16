@@ -55,14 +55,64 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ${{ env.OSS_CAD_DIR }}
-          key: oss-cad-suite-${{ env.OSS_CAD_VERSION }}-${{ runner.os }}
+          key: oss-cad-suite-pruned-${{ env.OSS_CAD_VERSION }}-${{ runner.os }}
 
+      # Extract only that we need, to go from 2.6 GB to ~1 GB installed files.
+      # We keep:
+      # - verilator, iverilog, ghdl : SpinalSim backends
+      # - yosys (+ synth_gatemate)   : synthesis
+      # - nextpnr-himbaechel         : GateMate place & route
+      # - sby, yices, z3             : SpinalHDL formal verification backend
+      # tar --exclude skip the biggest chunks during extraction, the find
+      # whitelist-complement below removes the rest to reduce cached size.
       - name: Install OSS cad suite
         if: steps.cache-oss-cad.outputs.cache-hit != 'true'
         run: |
           mkdir -p "$OSS_CAD_DIR"
           curl -sL ${OSS_CAD_DOWNLOAD_URL}/${OSS_CAD_VERSION}/oss-cad-suite-linux-x64-${OSS_CAD_VERSION//[^0-9]/}.tgz \
-            | tar xz -C "$OSS_CAD_DIR" --strip-components=1
+            | tar xz -C "$OSS_CAD_DIR" --strip-components=1 \
+                --exclude='oss-cad-suite/libexec/nextpnr-ice40' \
+                --exclude='oss-cad-suite/libexec/nextpnr-ecp5' \
+                --exclude='oss-cad-suite/libexec/nextpnr-machxo2' \
+                --exclude='oss-cad-suite/libexec/nextpnr-nexus' \
+                --exclude='oss-cad-suite/lib/python2.7' \
+                --exclude='oss-cad-suite/share/icebox' \
+                --exclude='oss-cad-suite/share/trellis' \
+                --exclude='oss-cad-suite/examples' \
+                --exclude='oss-cad-suite/super_prove'
+
+          cd "$OSS_CAD_DIR"
+
+          # Remove everything not whitelisted in bin/ and libexec/
+          find bin -maxdepth 1 -mindepth 1 \
+            ! -name 'yosys*' ! -name 'verilator*' ! -name 'iverilog*' ! -name 'vvp*' \
+            ! -name 'ghdl*' ! -name 'sby' ! -name 'tabbypy3' ! -name 'yices*' ! -name 'z3*' \
+            ! -name 'nextpnr-himbaechel*' -exec rm -rf {} +
+          find libexec -maxdepth 1 -mindepth 1 \
+            ! -name 'yosys*' ! -name 'verilator*' ! -name 'nextpnr-himbaechel*' \
+            ! -name 'ivl*' ! -name 'ghdl*' ! -name 'vhdlpp*' ! -name 'z3*' ! -name 'yices*' \
+            ! -name 'python3*' ! -name 'sby*' -exec rm -rf {} +
+
+          # share/yosys must be kept whole : gatemate cells, ghdl/slang plugins,
+          # and the sby_*.py modules used by SymbiYosys live in it.
+          find share -maxdepth 1 -mindepth 1 \
+            ! -name 'yosys' ! -name 'verilator' ! -name 'nextpnr' -exec rm -rf {} +
+          rm -rf share/nextpnr/himbaechel/gowin
+
+          # lib/ : python3.11 (needed by sby), LLVM (ghdl codegen), ghdl/iverilog
+          # runtimes, plus the libs the bundled python dlopens. The EDA binaries
+          # themselves are statically linked and do not need this tree.
+          find lib -maxdepth 1 -mindepth 1 \
+            ! -name 'python3.11*' ! -name 'libpython3.11*' ! -name 'libLLVM*' \
+            ! -name 'ghdl*' ! -name 'libghdl*' ! -name 'ivl*' ! -name 'libvvp*' \
+            ! -name 'ld-linux*' ! -name 'libz*' ! -name 'libffi*' ! -name 'libbz2*' \
+            ! -name 'liblzma*' ! -name 'libssl*' ! -name 'libcrypto*' \
+            ! -name 'libreadline*' ! -name 'libtinfo*' -exec rm -rf {} +
+
+          rm -rf include examples
+
+          echo "Pruned OSS CAD Suite size:"
+          du -sh "$OSS_CAD_DIR"
 
       - name: Build and test
         run: |
