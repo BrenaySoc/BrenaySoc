@@ -16,9 +16,9 @@ object Build extends App {
   val PRINT_METRICS = false
 
   val genStep = new SpinalGenVerilogStep()
-  val synthStep = new YosysSynthGatemateStep("/opt/oss-cad-suite/bin/yosys")
+  val synthStep = new YosysSynthGatemateStep()
   val placeRouteStep =
-    new PlaceRouteGatemateStep("/opt/oss-cad-suite/bin/nextpnr-himbaechel")
+    new PlaceRouteGatemateStep()
 
   val flowPath = Files.createDirectories(
     Paths.get("./flow_build/brenay/lib/blackbox/cologne/gatemate/demo/fifo/Build")

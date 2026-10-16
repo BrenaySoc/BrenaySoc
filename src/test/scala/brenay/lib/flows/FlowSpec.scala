@@ -116,7 +116,7 @@ class FlowSpec extends AnyWordSpec {
       }
 
       val genStep = new SpinalGenVerilogStep()
-      val synthStep = new YosysSynthGatemateStep("/opt/oss-cad-suite/bin/yosys")
+      val synthStep = new YosysSynthGatemateStep()
 
       val path =
         Files.createDirectories(Paths.get("./simWorkspace").resolve("ExternalBlackboxSingle"))
@@ -201,7 +201,7 @@ endmodule""".getBytes
       }
 
       val genStep = new SpinalGenVerilogStep()
-      val synthStep = new YosysSynthGatemateStep("/opt/oss-cad-suite/bin/yosys")
+      val synthStep = new YosysSynthGatemateStep()
 
       val path =
         Files.createDirectories(Paths.get("./simWorkspace").resolve("ExternalBlackboxMultiple"))

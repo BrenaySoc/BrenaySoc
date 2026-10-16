@@ -6,7 +6,7 @@ import spinal.lib.Counter
 
 import java.io.File
 
-import brenay.lib.blackbox.cologne.gatemate.{IoVoltage, CcUsrRstn}
+import brenay.lib.blackbox.cologne.gatemate.{CcUsrRstn, IoVoltage}
 import brenay.lib.gatemate.SioSerializerCc
 import brenay.vgasoc.{Processing, VgaSink, VgaSocParam}
 import vexiiriscv.fetch.PcPlugin
