@@ -30,13 +30,10 @@ jobs:
           # TODO fix multiple checkout of SpinalHDL
           submodules: recursive
 
-      - name: Install apt based dependencies
-        run: |
-          # Use Ubuntu JVM, highly likely present on the CI image.
-          SPINAL_DEPS=(openjdk-21-jdk)
-          OSS_DEPS=(liblz4-dev)
-          sudo apt-get update
-          sudo apt-get install -y "${SPINAL_DEPS[@]}" "${OSS_DEPS[@]}"
+      # No apt install as liblz4 is on the image
+
+      - name: Use the Temurin 21 JDK preinstalled on the runner image
+        run: echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
 
       - uses: coursier/cache-action@v8
 
