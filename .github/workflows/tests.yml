@@ -122,7 +122,7 @@ jobs:
           echo "Pruned OSS CAD Suite size:"
           du -sh "$OSS_CAD_DIR"
 
-      - name: Build and test
+      - name: Run the tests
         run: |
           source "$OSS_CAD_DIR/environment"
           sbt test
