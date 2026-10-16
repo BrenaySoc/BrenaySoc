@@ -30,7 +30,7 @@ jobs:
           # TODO fix multiple checkout of SpinalHDL
           submodules: recursive
 
-      - name: Use the Temurin 21 JDK preinstalled on the runner image
+      - name: Use a JDK preinstalled on the runner image
         run: echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
 
       - uses: coursier/cache-action@v8
@@ -43,8 +43,6 @@ jobs:
       - name: Verify scalaFmt and scalafix have been applied on the code
         run: sbt 'scalafmtCheckAll;scalafixAll --check'
 
-      # Ubuntu has no newlib for the riscv64-unknown-elf triplet, so apt
-      # toolchains cannot provide the -lc that asm.mk links against.
       # Use xPack what is similar to that NaxSoftware build from source uses for its
       # riscv-arch-test binaries (GCC 13.2).
       # This is not the SiFive GCC 8.3 bundle form VexiiRiscv documentation.
@@ -132,7 +130,7 @@ jobs:
       - name: Place & Route of Olimex VgaSoc
         run: |
           source "$OSS_CAD_DIR/environment"
-          sbt runMain brenay.vgasoc.board.olimex.gatemate_a1_evb.Build
+          sbt "runMain brenay.vgasoc.board.olimex.gatemate_a1_evb.Build"
 
 
 
