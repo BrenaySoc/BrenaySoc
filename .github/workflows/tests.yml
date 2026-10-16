@@ -1,0 +1,78 @@
+name: Arch CI tests
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+# Cancel previous runs on the same PR to avoid unnecessary minutes.
+# Create emails and X in the git interface as a minor side effect.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      OSS_CAD_DOWNLOAD_URL: https://github.com/YosysHQ/oss-cad-suite-build/releases/download
+
+      OSS_CAD_VERSION: "2026-08-26"
+
+      # OSS is installed in the tool cache to simplify caching.
+      OSS_CAD_DIR: ${{ runner.tool_cache }}/oss-cad-suite/${{ env.OSS_CAD_VERSION }}
+
+      # For a CI to be usable, it should be reproducible. This env var is parsed
+      # by SpinalHDL simulation engine and used ass seed for simRandom. This insure
+      # deterministic simulation failures.
+      SPINAL_SIM_SEED: "1"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Install apt based dependencies
+        run: |
+          # Use Ubuntu JVM, highly likely present on the CI image.
+          SPINAL_DEPS=(openjdk-21-jdk)
+          OSS_DEPS=(liblz4-dev)
+          sudo apt-get update
+          sudo apt-get install -y "${SPINAL_DEPS[@]}" "${OSS_DEPS[@]}"
+
+      - uses: coursier/cache-action@v8
+
+      - uses: coursier/setup-action@v3
+        with:
+          # No 'jvm: x', use the CI image one.
+          apps: sbt
+
+      - name: Verify scalaFmt and scalafix have been applied on the code
+        run: sbt 'scalafmtCheckAll;scalafixAll --check'
+
+      - name: Cache OSS CAD Suite
+        id: cache-oss-cad
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.OSS_CAD_DIR }}
+          key: oss-cad-suite-${{ env.OSS_CAD_VERSION }}-${{ runner.os }}
+
+      - name: Install OSS cad suite
+        if: steps.cache-oss-cad.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "$OSS_CAD_DIR"
+          curl -sL ${OSS_CAD_DOWNLOAD_URL}/${OSS_CAD_VERSION}/oss-cad-suite-linux-x64-${OSS_CAD_VERSION//[^0-9]/}.tgz \
+            | tar xz -C "$OSS_CAD_DIR" --strip-components=1
+
+      - name: Build and test
+        run: |
+          source "$OSS_CAD_DIR/environment"
+          sbt test
+
+      - name: Place & Route of Olimex VgaSoc
+        run: |
+          source "$OSS_CAD_DIR/environment"
+          sbt runMain brenay.vgasoc.board.olimex.gatemate_a1_evb.Build
+
+
+
