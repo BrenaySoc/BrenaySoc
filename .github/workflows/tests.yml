@@ -85,7 +85,7 @@ jobs:
                 --exclude='oss-cad-suite/share/icebox' \
                 --exclude='oss-cad-suite/share/trellis' \
                 --exclude='oss-cad-suite/examples' \
-                --exclude='oss-cad-suite/share/nextpnr/himbaechel/gowin' \            
+                --exclude='oss-cad-suite/share/nextpnr/himbaechel/gowin' \
                 --exclude='oss-cad-suite/super_prove'
 
       - name: Run the tests
